@@ -33,6 +33,7 @@ import BS_Quoc from './components/user/doctors/BS_Quoc';
 import BS_BKhanh from './components/user/doctors/BS_BKhanh';
 import BS_Xuyen from './components/user/doctors/BS_Xuyen';
 import BS_Tan from './components/user/doctors/BS_Tan';
+import UserForm from './components/user/UserForm';
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
           <Route path="/bs.nguyễn-hữu-tân" element={<BS_Tan />} />
           <Route path="/hantramrang" element={<HanTramRang />} />
           <Route path="/chamsocrangmieng" element={<ChamSocRangMieng />} />
+          <Route path="/UserForm" element={<UserForm />} />
         </Routes>
         <TopScroll />
       </div>

@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { FaCheck, FaTimes } from 'react-icons/fa';
+import { Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton } from '@mui/material';
 import useUserStore from "../../store/userStore";
 
 const AppointmentList = () => {
     const [appointments, setAppointments] = useState([]);
-    const [services, setServices] = useState([]); // Thêm state cho services
+    const [services, setServices] = useState([]);
     const { user, setUser } = useUserStore();
 
     useEffect(() => {
         const fetchUserData = async () => {
-            const token = localStorage.getItem('token'); // Lấy token từ localStorage
+            const token = localStorage.getItem('token');
             const response = await axios.get('http://localhost:8080/me', {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -32,16 +33,15 @@ const AppointmentList = () => {
             const fetchServices = async () => {
                 try {
                     const response = await axios.get('http://localhost:8080/specialties');
-                    // Lọc các dịch vụ để chỉ giữ lại những dịch vụ mà bác sĩ có tên bằng 'name'
                     const filteredServices = response.data.filter(specialty => specialty.sevice === name);
-                    setServices(filteredServices); // Cập nhật trạng thái 'services' với danh sách đã lọc
+                    setServices(filteredServices);
                 } catch (error) {
                     console.error('Error fetching services:', error);
                 }
             };
 
-            fetchAppointments(); // Gọi hàm fetchAppointments
-            fetchServices(); // Gọi hàm fetchServices
+            fetchAppointments();
+            fetchServices();
         };
 
         fetchUserData();
@@ -81,55 +81,57 @@ const AppointmentList = () => {
     return (
         <div>
             <h3>Danh sách đặt lịch</h3>
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Họ và tên</th>
-                        <th>Số điện thoại</th>
-                        <th>Địa chỉ</th>
-                        <th>Giới tính</th>
-                        <th>Năm sinh</th>
-                        <th>Ngày hẹn</th>
-                        <th>Giờ hẹn</th>
-                        <th>Bác sĩ</th>
-                        <th>Bác sĩ</th>
-                        <th>Nội dung</th>
-                        <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
-                        <th>Chấp nhận/ Từ chối</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {appointments.map((appointment, index) => (
-                        <tr key={appointment.id}>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.id}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.fullname}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.phone}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.address}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.gender}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.birth_year}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{new Date(appointment.appointment_date).toLocaleDateString('en-GB')}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.appointment_time}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.doctor_name}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.doctor_name}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.content}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{new Date(appointment.appointment_date).toLocaleString('en-GB')}</td>
-                            <td className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>
-                                {appointment.status === 'accept' ? 'Đã xác nhận' : appointment.status === 'reject' ? 'Đã từ chối' : 'Đang chờ'}
-                            </td>
-                            <td>
-                                {appointment.status !== 'accept' && appointment.status !== 'reject' && (
-                                    <>
-                                        <FaCheck onClick={() => confirmAppointment(appointment.id)} style={{ cursor: 'pointer', color: 'green', marginRight: '10px' }} />
-                                        <FaTimes onClick={() => rejectAppointment(appointment.id)} style={{ cursor: 'pointer', color: 'red' }} />
-                                    </>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Họ và tên</TableCell>
+                            <TableCell>Số điện thoại</TableCell>
+                            <TableCell>Địa chỉ</TableCell>
+                            <TableCell>Giới tính</TableCell>
+                            <TableCell>Năm sinh</TableCell>
+                            <TableCell>Ngày hẹn</TableCell>
+                            <TableCell>Giờ hẹn</TableCell>
+                            <TableCell>Bác sĩ</TableCell>
+                            <TableCell>Nội dung</TableCell>
+                            <TableCell>Ngày tạo</TableCell>
+                            <TableCell>Trạng thái</TableCell>
+                            <TableCell>Chấp nhận/ Từ chối</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {appointments.map((appointment, index) => (
+                            <TableRow key={appointment.id}>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.fullname}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.phone}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.address}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.gender}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.birth_year}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{new Date(appointment.appointment_date).toLocaleDateString('en-GB')}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.appointment_time}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.doctor_name}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{appointment.content}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>{new Date(appointment.appointment_date).toLocaleString('en-GB')}</TableCell>
+                                <TableCell className={checkForDuplicates(appointment, index) ? 'highlight' : ''}>
+                                    {appointment.status === 'accept' ? 'Đã xác nhận' : appointment.status === 'reject' ? 'Đã từ chối' : 'Đang chờ'}
+                                </TableCell>
+                                <TableCell>
+                                    {appointment.status !== 'accept' && appointment.status !== 'reject' && (
+                                        <>
+                                            <IconButton onClick={() => confirmAppointment(appointment.id)} style={{ color: 'green', marginRight: '10px' }}>
+                                                <CheckIcon />
+                                            </IconButton>
+                                            <IconButton onClick={() => rejectAppointment(appointment.id)} style={{ color: 'red' }}>
+                                                <CloseIcon />
+                                            </IconButton>
+                                        </>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
 };

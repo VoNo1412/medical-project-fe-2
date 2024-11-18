@@ -2,16 +2,41 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import useUserStore from '../../store/userStore';
+import { 
+  TextField, 
+  Select, 
+  MenuItem, 
+  Dialog, 
+  DialogActions, 
+  DialogContent, 
+  DialogTitle, 
+  Button, 
+  InputLabel, 
+  FormControl, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Grid,
+  IconButton, 
+  Autocomplete,
+  Paper 
+} from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 const MedicalRecordList = () => {
-    const [records, setRecords] = useState([]);
-    const [doctors, setDoctors] = useState([]);
-    const [patients, setPatients] = useState([]);
-    const [editingRecord, setEditingRecord] = useState(null);
-    const { user } = useUserStore();
-    const [specialties, setSpecialties] = useState([]); // State for specialties
-    const [services, setServices] = useState([]);
+    // Khai báo các state để lưu trữ dữ liệu và trạng thái của các yếu tố trong component
+    const [records, setRecords] = useState([]); // Lưu trữ danh sách bệnh án
+    const [doctors, setDoctors] = useState([]); // Lưu trữ danh sách bác sĩ
+    const [patients, setPatients] = useState([]); // Lưu trữ danh sách bệnh nhân
+    const [editingRecord, setEditingRecord] = useState(null); // Lưu trữ bản ghi đang chỉnh sửa
+    const { user } = useUserStore(); // Lấy thông tin người dùng từ store
+    const [specialties, setSpecialties] = useState([]); // Lưu trữ danh sách chuyên khoa
+    const [services, setServices] = useState([]); // Lưu trữ danh sách dịch vụ
 
+    // Khai báo state cho form dữ liệu nhập vào
     const [formData, setFormData] = useState({
         patient_id: '',
         doctor_id: '',
@@ -29,80 +54,97 @@ const MedicalRecordList = () => {
         total_price: '',
         prescription: ''
     });
-    const [showForm, setShowForm] = useState(false);
+    const [showForm, setShowForm] = useState(false); // Trạng thái hiển thị form
 
+    // Dùng useEffect để fetch dữ liệu khi component được render lần đầu
     useEffect(() => {
-        fetchRecords();
-        fetchDoctors();
-        fetchPatients();
-        fetchSpecialties(); // Fetch specialties
-
+        fetchRecords(); // Lấy dữ liệu bệnh án
+        fetchDoctors(); // Lấy dữ liệu bác sĩ
+        fetchPatients(); // Lấy dữ liệu bệnh nhân
+        fetchSpecialties(); // Lấy danh sách chuyên khoa
     }, []);
 
+    // Hàm lấy danh sách chuyên khoa từ API
     const fetchSpecialties = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/specialties'); // Adjust the URL if necessary
-            setSpecialties(response.data); // Populate state with API response
+            const response = await axios.get('http://localhost:8080/specialties'); // Gọi API lấy chuyên khoa
+            setSpecialties(response.data); // Cập nhật state specialties với dữ liệu trả về
         } catch (error) {
-            toast.error('Không thể lấy danh sách chuyên khoa');
+            toast.error('Không thể lấy danh sách chuyên khoa'); // Thông báo lỗi nếu không lấy được dữ liệu
         }
     };
 
-    // Fetch services when specialty is selected
+    // Hàm lấy danh sách dịch vụ khi người dùng chọn chuyên khoa
     const fetchServices = async (id) => {
         try {
-            const response = await axios.get('http://localhost:8080/services', { params: { specialty_id: id } });
-            setServices(response.data);
+            const response = await axios.get('http://localhost:8080/services', { params: { specialty_id: id } }); // Gọi API với tham số chuyên khoa
+            setServices(response.data); // Cập nhật danh sách dịch vụ
         } catch (error) {
-            console.error('Failed to fetch services:', error);
+            console.error('Failed to fetch services:', error); // In lỗi nếu gọi dịch vụ không thành công
         }
     };
 
+    // Hàm lấy dữ liệu bệnh án từ API
     const fetchRecords = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/medical-records');
+            const response = await axios.get('http://localhost:8080/medical-records'); // Gọi API lấy bệnh án
             if (Array.isArray(response.data)) {
-                setRecords(response.data);
+                setRecords(response.data); // Cập nhật danh sách bệnh án nếu dữ liệu hợp lệ
             } else {
-                setRecords([]);
-                toast.error('Dữ liệu bệnh án không hợp lệ');
+                setRecords([]); // Nếu dữ liệu không hợp lệ, cập nhật state là mảng rỗng
+                toast.error('Dữ liệu bệnh án không hợp lệ'); // Thông báo lỗi nếu dữ liệu không hợp lệ
             }
         } catch (error) {
-            toast.error('Không thể lấy dữ liệu bệnh án');
+            toast.error('Không thể lấy dữ liệu bệnh án'); // Thông báo lỗi khi không thể gọi API
         }
     };
 
+    // Hàm lấy danh sách bác sĩ từ API
     const fetchDoctors = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/doctors`);
-            setDoctors(response.data);
+            const response = await axios.get(`http://localhost:8080/doctors`); // Gọi API lấy bác sĩ
+            setDoctors(response.data); // Cập nhật danh sách bác sĩ
         } catch (error) {
-            toast.error('Không thể lấy dữ liệu bác sĩ');
+            toast.error('Không thể lấy dữ liệu bác sĩ'); // Thông báo lỗi nếu không thể lấy dữ liệu
         }
     };
 
+    // Hàm lấy danh sách bệnh nhân từ API
     const fetchPatients = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/patients');
-            setPatients(response.data);
+            const response = await axios.get('http://localhost:8080/patients'); // Gọi API lấy bệnh nhân
+            setPatients(response.data); // Cập nhật danh sách bệnh nhân
         } catch (error) {
-            toast.error('Không thể lấy dữ liệu bệnh nhân');
+            toast.error('Không thể lấy dữ liệu bệnh nhân'); // Thông báo lỗi khi không thể gọi API
         }
     };
+
+    // Phần render giao diện có thể được thêm ở đây
 
 
 
     const handleEdit = (record) => {
-        setEditingRecord(record);
-        setFormData({
-            patient_id: record.patient_id,
-            doctor_id: record.doctor_id,
-            diagnosis: record.diagnosis,
-            treatment: record.treatment,
-            record_date: record.record_date
-        });
-        setShowForm(true);
-    };
+    setEditingRecord(record);
+    setFormData({
+        patient_id: record.patient_id || '',
+        doctor_id: record.doctor_id || '',
+        diagnosis: record.diagnosis || '',
+        treatment: record.treatment || '',
+        record_date: record.record_date || '',
+        address: record.address || '',
+        phone: record.phone || '',
+        gender: record.gender || '',
+        birth_year: record.birth_year || '',
+        specialty: record.specialty || '',
+        service: record.service || '',
+        quantity: record.quantity || '',
+        unit_price: record.unit_price || '',
+        total_price: record.total_price || '',
+        prescription: record.prescription || ''
+    });
+    setShowForm(true);
+};
+
 
     const handleDelete = async (id) => {
         try {
@@ -158,226 +200,363 @@ const MedicalRecordList = () => {
 
     
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            if (editingRecord) {
-                await axios.put(`http://localhost:8080/medical-records/${editingRecord.id}`, formData);
-                toast.success('Cập nhật bệnh án thành công');
-            } else {
-                await axios.post('http://localhost:8080/medical-records', formData);
-                toast.success('Thêm bệnh án thành công');
-            }
-            setEditingRecord(null);
-            setFormData({
-                patient_id: '',
-                doctor_id: '',
-                diagnosis: '',
-                treatment: '',
-                record_date: ''
-            });
-            setShowForm(false);
-            fetchRecords();
-        } catch (error) {
-            toast.error('Không thể gửi biểu mẫu');
-        }
-    };
+    e.preventDefault(); // Ngăn trình duyệt reload trang
+    try {
+        const url = editingRecord
+            ? `http://localhost:8080/medical-records/${editingRecord.id}`
+            : 'http://localhost:8080/medical-records';
+
+        const method = editingRecord ? 'put' : 'post';
+
+        // Gửi toàn bộ dữ liệu formData
+        await axios({
+            method,
+            url,
+            data: formData,
+        });
+
+        toast.success(`${editingRecord ? 'Cập nhật' : 'Thêm'} bệnh án thành công`);
+        setEditingRecord(null);
+        setFormData({
+            patient_id: '',
+            doctor_id: '',
+            diagnosis: '',
+            treatment: '',
+            record_date: '',
+            address: '',
+            phone: '',
+            gender: '',
+            birth_year: '',
+            specialty: '',
+            service: '',
+            quantity: '',
+            unit_price: '',
+            total_price: '',
+            prescription: ''
+        });
+        setShowForm(false);
+        fetchRecords(); // Tải lại danh sách sau khi thêm hoặc cập nhật
+    } catch (error) {
+        console.error('API Error:', error);
+        toast.error('Không thể gửi biểu mẫu');
+    }
+};
+
+
+
 
     return (
         <div>
-            <h3>Quản lý Bệnh án </h3>
             <button className="btn btn-primary my-3" onClick={() => setShowForm(true)}>Thêm Bệnh án</button>
-            {showForm && (
-                <form onSubmit={handleSubmit}>
-                    <label htmlFor="patient_id">Mã Bệnh nhân:</label>
-                    <select
-                        id="patient_id"
-                        name="patient_id"
-                        className="form-control"
-                        value={formData.patient_id}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Chọn Bệnh nhân</option>
-                        {patients.map(patient => (
-                            <option key={patient.id} value={patient.id}>{patient.fullname}</option>
-                        ))}
-                    </select>
+            <Dialog open={showForm} onClose={() => setShowForm(false)}>
+                <DialogTitle>Quản lý Bệnh án</DialogTitle>
+                <DialogContent>
+                    <form onSubmit={handleSubmit}>
 
-                    <label htmlFor="doctor_id">Mã Bác sĩ:</label>
-                    <input type="text" value={user.profile.fullname} />
+                        <Grid container spacing={2}>
+                            {/* Cột 1 */}
+                            <Grid item xs={12} sm={6}>
+                                {/* Mã Bệnh nhân */}
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="patient_id">Mã Bệnh nhân</InputLabel>
+                                    <Select
+                                        labelId="patient_id"
+                                        id="patient_id"
+                                        name="patient_id"
+                                        value={formData.patient_id}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <MenuItem value="">
+                                            <em>Chọn Bệnh nhân</em>
+                                        </MenuItem>
+                                        {patients.map(patient => (
+                                            <MenuItem key={patient.id} value={patient.id}>
+                                                {patient.fullname}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                    <label htmlFor="diagnosis">Chẩn đoán:</label>
-                    <textarea
-                        id="diagnosis"
-                        name="diagnosis"
-                        value={formData.diagnosis}
-                        onChange={handleChange}
-                        required
-                    ></textarea>
+                                {/* Mã Bác sĩ */}
+                                <TextField
+                                    label="Mã Bác sĩ"
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="normal"
+                                    value={user.profile.fullname}
+                                    InputProps={{
+                                        readOnly: true,
+                                    }}
+                                />
 
-                    <label htmlFor="treatment">Điều trị:</label>
-                    <textarea
-                        id="treatment"
-                        name="treatment"
-                        value={formData.treatment}
-                        onChange={handleChange}
-                        required
-                    ></textarea>
+                                {/* Chẩn đoán */}
+                                <TextField
+                                    label="Chẩn đoán"
+                                    variant="outlined"
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    name="diagnosis"
+                                    value={formData.diagnosis}
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                />
 
-                    <label htmlFor="record_date">Ngày ghi nhận:</label>
-                    <input
-                        type="date"
-                        id="record_date"
-                        name="record_date"
-                        value={formData.record_date}
-                        onChange={handleChange}
-                        required
-                    />
+                                {/* Điều trị */}
+                                <TextField
+                                    label="Điều trị"
+                                    variant="outlined"
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    name="treatment"
+                                    value={formData.treatment}
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                />
+                                
+                                {/* Ngày ghi nhận */}
+                                <TextField
+                                label="Ngày ghi nhận"
+                                variant="outlined"
+                                type="date"
+                                fullWidth
+                                name="record_date"
+                                value={formData.record_date || new Date().toLocaleDateString('en-CA')} // Sử dụng múi giờ địa phương
+                                onChange={handleChange}
+                                required
+                                margin="normal"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                inputProps={{
+                                    
+                                    min: new Date().toLocaleDateString('en-CA'), // Giới hạn ngày tối thiểu là hôm nay, dùng múi giờ địa phương
+                                }}
+                            />
+                            </Grid>
 
-                    {/* Thêm các trường mới */}
-                    <label htmlFor="address">Địa chỉ:</label>
-                    <input
-                        type="text"
-                        id="address"
-                        name="address"
-                        value={formData.address || ''}
-                        onChange={handleChange}
-                        required
-                    />
+                            {/* Cột 2 */}
+                            <Grid item xs={12} sm={6}>
+                                {/* Địa chỉ */}
+                                <TextField
+                                    label="Địa chỉ"
+                                    variant="outlined"
+                                    fullWidth
+                                    name="address"
+                                    value={formData.address || ''}
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                />
 
-                    <label htmlFor="phone">Số điện thoại:</label>
-                    <input
-                        type="text"
-                        id="phone"
-                        name="phone"
-                        value={formData.phone || ''}
-                        onChange={handleChange}
-                        required
-                    />
+                                {/* Số điện thoại */}
+                                <TextField
+                                    label="Số điện thoại"
+                                    variant="outlined"
+                                    fullWidth
+                                    name="phone"
+                                    value={formData.phone || ''}
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                />
 
-                    <label htmlFor="gender">Giới tính:</label>
-                    <select
-                        id="gender"
-                        name="gender"
-                        value={formData.gender || ''}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Chọn giới tính</option>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
-                    </select>
+                                {/* Giới tính */}
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="gender">Giới tính</InputLabel>
+                                    <Select
+                                        labelId="gender"
+                                        id="gender"
+                                        name="gender"
+                                        value={formData.gender || ''}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <MenuItem value="">
+                                            <em>Chọn giới tính</em>
+                                        </MenuItem>
+                                        <MenuItem value="male">Nam</MenuItem>
+                                        <MenuItem value="female">Nữ</MenuItem>
+                                        <MenuItem value="other">Khác</MenuItem>
+                                    </Select>
+                                </FormControl>
 
-                    <label htmlFor="birth_year">Năm sinh:</label>
-                    <input
-                        type="number"
-                        id="birth_year"
-                        name="birth_year"
-                        value={formData.birth_year || ''}
-                        onChange={handleChange}
-                        required
-                    />
+                                {/* Năm sinh */}
+                                <TextField
+                                    label="Năm sinh"
+                                    variant="outlined"
+                                    type="number"
+                                    fullWidth
+                                    name="birth_year"
+                                    value={formData.birth_year || ''}
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                />
 
-                    <label htmlFor="specialty">Chuyên khoa:</label>
-                    <select
-                        id="specialty"
-                        name="specialty"
-                        value={formData.specialty || ''}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Chọn chuyên khoa</option>
-                        {specialties.map(specialty => (
-                            <option key={specialty.id} value={specialty.name}>{specialty.name}</option>
-                        ))}
-                    </select>
+                                {/* Chuyên khoa */}
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="specialty">Chuyên khoa</InputLabel>
+                                    <Select
+                                        labelId="specialty"
+                                        id="specialty"
+                                        name="specialty"
+                                        value={formData.specialty || ''}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <MenuItem value="">
+                                            <em>Chọn chuyên khoa</em>
+                                        </MenuItem>
+                                        {specialties.map(specialty => (
+                                            <MenuItem key={specialty.id} value={specialty.name}>
+                                                {specialty.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                {/* Dịch vụ */}
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="service">Dịch vụ</InputLabel>
+                                    <Select
+                                        labelId="service"
+                                        id="service"
+                                        name="service"
+                                        value={formData.service || ''}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <MenuItem value="">
+                                            <em>Chọn dịch vụ</em>
+                                        </MenuItem>
+                                        {services.map(service => (
+                                            <MenuItem key={service.id} value={service.id}>
+                                                {service.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                {/* Số lượng */}
+                                <TextField
+                                    label="Số lượng"
+                                    variant="outlined"
+                                    type="number"
+                                    fullWidth
+                                    name="quantity"
+                                    value={formData.quantity || ''}
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                />
+
+                                {/* Đơn giá */}
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="unit_price">Đơn Giá</InputLabel>
+                                    <Select
+                                        labelId="unit_price"
+                                        id="unit_price"
+                                        name="unit_price"
+                                        value={formData.service || ''}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <TextField value="">
+                                            <em></em>
+                                        </TextField>
+                                        {services.map(service => (
+                                            <TextField key={service.id} value={service.id}>
+                                                {service.price}
+                                            </TextField>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                {/* Thành tiền */}
+                                <TextField
+                                    label="Thành tiền"
+                                    variant="outlined"
+                                    type="number"
+                                    fullWidth
+                                    name="total_price"
+                                    value={formData.total_price || ''}
+                                    margin="normal"
+                                />
 
 
-                    <label htmlFor="service">Dịch vụ:</label>
-                    <select
-                        id="service"
-                        name="service"
-                        value={formData.service || ''}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Chọn dịch vụ</option>
-                        {/* Thêm danh sách dịch vụ */}
-                        {services.map(service => (
-                            <option key={service.id} value={service.id}>{service.name}</option>
-                        ))}
-                    </select>
+                                {/* Đơn thuốc */}
+                                <TextField
+                                    label="Đơn thuốc"
+                                    variant="outlined"
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    name="prescription"
+                                    value={formData.prescription || ''}
+                                    onChange={handleChange}
+                                    margin="normal"
+                                />
+                            </Grid>
+                        </Grid>
+                        
+                    </form>
+                </DialogContent>
+                <DialogActions>
+                    <form onSubmit={handleSubmit}>
+    {/* Các input trong form */}
+    <DialogActions>
+        <Button onClick={() => setShowForm(false)} color="secondary">
+            Hủy
+        </Button>
+        <Button type="submit" color="primary">
+            {editingRecord ? 'Cập nhật' : 'Thêm'} Bệnh án
+        </Button>
+    </DialogActions>
+</form>
 
-                    <label htmlFor="quantity">Số lượng:</label>
-                    <input
-                        type="number"
-                        id="quantity"
-                        name="quantity"
-                        value={formData.quantity || ''}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <label htmlFor="unit_price">Đơn giá:</label>
-                    <input
-                        type="number"
-                        id="unit_price"
-                        name="unit_price"
-                        value={formData.unit_price || ''}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <label htmlFor="total_price">Thành tiền:</label>
-                    <input
-                        type="number"
-                        id="total_price"
-                        name="total_price"
-                        value={formData.total_price || ''}
-                        onChange={handleChange}
-                        readOnly
-                    />
-
-                    <label htmlFor="prescription">Đơn thuốc:</label>
-                    <textarea
-                        id="prescription"
-                        name="prescription"
-                        value={formData.prescription || ''}
-                        onChange={handleChange}
-                    ></textarea>
-
-                    <div className="d-flex justify-content-center">
-                        <button className="w-25 m-3" type="submit">{editingRecord ? 'Cập nhật' : 'Thêm'} Bệnh án</button>
-                        <button className="w-25 m-3" type="button" onClick={() => setShowForm(false)}>Hủy</button>
-                    </div>
-                </form>
-            )}
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>Tên Bệnh nhân</th>
-                        <th>Tên Bác sĩ</th>
-                        <th>Chẩn đoán</th>
-                        <th>Điều trị</th>
-                        <th>Ngày ghi nhận</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
+                </DialogActions>
+            </Dialog>
+            <TableContainer component={Paper}>
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell align="center">Tên Bệnh nhân</TableCell>
+                        <TableCell align="center">Tên Bác sĩ</TableCell>
+                        <TableCell align="center">Chẩn đoán</TableCell>
+                        <TableCell align="center">Điều trị</TableCell>
+                        <TableCell align="center">Ngày ghi nhận</TableCell>
+                        <TableCell align="center">Địa chỉ</TableCell>
+                        <TableCell align="center">Số điện thoại</TableCell>
+                        <TableCell align="center">Giới tính</TableCell>
+                        <TableCell align="center">Năm sinh</TableCell>
+                        <TableCell align="center">Chuyên khoa</TableCell>
+                        <TableCell align="center">Hành động</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
                     {records.map(record => (
-                        <tr key={record.id}>
-                            <td>{record.patient_name}</td>
-                            <td>{record.doctor_name}</td>
-                            <td>{record.diagnosis}</td>
-                            <td>{record.treatment}</td>
-                            <td>{new Date(record.record_date).toLocaleDateString()}</td>
-                            <td>
-                                <button className="btn-icon edit-icon m-2" onClick={() => handleEdit(record)} title="Sửa">
-                                    <i className="bi bi-pencil-fill"></i>
-                                </button>
-                                <button
-                                    className="btn-icon delete-icon"
+                        <TableRow key={record.id}>
+                            <TableCell align="center">{record.patient_name}</TableCell>
+                            <TableCell align="center">{record.doctor_name}</TableCell>
+                            <TableCell align="center">{record.diagnosis}</TableCell>
+                            <TableCell align="center">{record.treatment}</TableCell>
+                            <TableCell align="center">{new Date(record.record_date).toLocaleDateString()}</TableCell>
+                            <TableCell align="center">{record.address}</TableCell>
+                            <TableCell align="center">{record.phone}</TableCell>
+                            <TableCell align="center">{record.gender}</TableCell>
+                            <TableCell align="center">{record.birth_year}</TableCell>
+                            <TableCell align="center">{record.specialty}</TableCell>
+                            <TableCell align="center">
+                                <IconButton color="primary" onClick={() => handleEdit(record)} title="Sửa">
+                                    <EditIcon />
+                                </IconButton>
+                                <IconButton
+                                    color="secondary"
                                     onClick={() => {
                                         if (window.confirm('Bạn có chắc chắn muốn xóa bệnh án này không?')) {
                                             handleDelete(record.id);
@@ -385,13 +564,14 @@ const MedicalRecordList = () => {
                                     }}
                                     title="Xóa"
                                 >
-                                    <i className="bi bi-trash-fill"></i>
-                                </button>
-                            </td>
-                        </tr>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </TableCell>
+                        </TableRow>
                     ))}
-                </tbody>
-            </table>
+                </TableBody>
+            </Table>
+        </TableContainer>
         </div>
     );
 };
