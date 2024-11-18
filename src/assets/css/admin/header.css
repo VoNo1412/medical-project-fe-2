@@ -1,0 +1,57 @@
+/* src/components/admin/header.css */
+
+/* Header Styles */
+.header {
+    background-color: #99d4f1;
+    /* Màu nền xanh cho Header */
+    color: white;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Giữ khoảng cách giữa các phần tử */
+}
+
+.header .btn {
+    color: rgb(0, 0, 0);
+    /* Màu chữ cho các nút */
+    border: 1px solid #6c757d;
+    margin-left: 8px;
+    /* Khoảng cách giữa các nút */
+    width: auto;
+}
+
+.header .btn:hover {
+    background-color: #f3ebeb;
+    /* Màu nền khi hover */
+    border-color: #000000;
+}
+
+
+.header img {
+    height: 60px;
+    /* Điều chỉnh chiều cao cho hình ảnh */
+    width: auto;
+    /* Giữ tỷ lệ chiều rộng tự động */
+}
+
+/* Tùy chỉnh cho nút hiển thị tên bác sĩ */
+.profile-button {
+    color: white;
+    /* Màu chữ cho nút hiển thị tên bác sĩ */
+    transition: color 0.3s ease;
+    /* Hiệu ứng chuyển màu mượt mà */
+}
+
+.profile-button:hover {
+    color: #ffffff;
+    /* Màu chữ khi di chuột qua nút hiển thị tên bác sĩ */
+}
+
+/* Thay đổi màu chữ cho tên bác sĩ */
+.profile-name {
+    color: #ff0000;
+    font-style: italic;
+    font-weight: bold;
+    /* Màu chữ cho tên bác sĩ */
+}
