@@ -8,21 +8,55 @@ const MedicalRecordList = () => {
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
     const [editingRecord, setEditingRecord] = useState(null);
+    const { user } = useUserStore();
+    const [specialties, setSpecialties] = useState([]); // State for specialties
+    const [services, setServices] = useState([]);
+
     const [formData, setFormData] = useState({
         patient_id: '',
         doctor_id: '',
         diagnosis: '',
         treatment: '',
-        record_date: ''
+        record_date: '',
+        address: '',
+        phone: '',
+        gender: '',
+        birth_year: '',
+        specialty: '',
+        service: '',
+        quantity: '',
+        unit_price: '',
+        total_price: '',
+        prescription: ''
     });
     const [showForm, setShowForm] = useState(false);
-
 
     useEffect(() => {
         fetchRecords();
         fetchDoctors();
         fetchPatients();
+        fetchSpecialties(); // Fetch specialties
+
     }, []);
+
+    const fetchSpecialties = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/specialties'); // Adjust the URL if necessary
+            setSpecialties(response.data); // Populate state with API response
+        } catch (error) {
+            toast.error('Không thể lấy danh sách chuyên khoa');
+        }
+    };
+
+    // Fetch services when specialty is selected
+    const fetchServices = async (id) => {
+        try {
+            const response = await axios.get('http://localhost:8080/services', { params: { specialty_id: id } });
+            setServices(response.data);
+        } catch (error) {
+            console.error('Failed to fetch services:', error);
+        }
+    };
 
     const fetchRecords = async () => {
         try {
@@ -40,7 +74,7 @@ const MedicalRecordList = () => {
 
     const fetchDoctors = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/doctors');
+            const response = await axios.get(`http://localhost:8080/doctors`);
             setDoctors(response.data);
         } catch (error) {
             toast.error('Không thể lấy dữ liệu bác sĩ');
@@ -55,6 +89,8 @@ const MedicalRecordList = () => {
             toast.error('Không thể lấy dữ liệu bệnh nhân');
         }
     };
+
+
 
     const handleEdit = (record) => {
         setEditingRecord(record);
@@ -78,11 +114,49 @@ const MedicalRecordList = () => {
         }
     };
 
-    const handleChange = (e) => {
+    const handleChange = async (e) => {
         const { name, value } = e.target;
+        if (name === "specialty") {
+            const id = specialties.filter(x => x.name === value)[0].id
+            fetchServices(id)
+        }
+        // Cập nhật giá trị trường hiện tại
         setFormData({ ...formData, [name]: value });
+
+        // Nếu thay đổi `patient_id`, gọi API lấy thông tin cuộc hẹn
+        if (name === 'patient_id') {
+            try {
+                const response = await axios.get(`http://localhost:8080/appointments?benhNhanId=${formData.patient_id}&doctorId=${user.profile.id}`);
+                if (response.data) {
+                    // Điền thông tin từ cuộc hẹn vào form
+                    setFormData({
+                        ...formData,
+                        patient_id: value, // Đảm bảo patient_id vẫn giữ giá trị mới
+                        doctor_id: response.data[0].doctor_id || '',
+                        diagnosis: response.data[0].diagnosis || '',
+                        treatment: response.data[0].treatment || '',
+                        record_date: response.data[0].record_date || '',
+                        address: response.data[0].address || '',
+                        phone: response.data[0].phone || '',
+                        gender: response.data[0].gender || '',
+                        birth_year: response.data[0].birth_year || '',
+                        specialty: response.data[0].specialty || '',
+                        service: response.data[0].service || '',
+                        quantity: response.data[0].quantity || '',
+                        unit_price: response.data[0].unit_price || '',
+                        total_price: response.data[0].total_price || '',
+                        prescription: response.data[0].prescription || '',
+                    });
+                } else {
+                    toast.error('Không tìm thấy thông tin cuộc hẹn của bệnh nhân');
+                }
+            } catch (error) {
+                toast.error('Không thể lấy dữ liệu cuộc hẹn của bệnh nhân');
+            }
+        }
     };
 
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -128,21 +202,9 @@ const MedicalRecordList = () => {
                             <option key={patient.id} value={patient.id}>{patient.fullname}</option>
                         ))}
                     </select>
-                    
+
                     <label htmlFor="doctor_id">Mã Bác sĩ:</label>
-                    <select
-                        id="doctor_id"
-                        name="doctor_id"
-                        className="form-control"
-                        value={formData.doctor_id}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Chọn Bác sĩ</option>
-                        {doctors.map(doctor => (
-                            <option key={doctor.id} value={doctor.id}>{doctor.fullname}</option>
-                        ))}
-                    </select>
+                    <input type="text" value={user.profile.fullname} />
 
                     <label htmlFor="diagnosis">Chẩn đoán:</label>
                     <textarea
@@ -226,11 +288,11 @@ const MedicalRecordList = () => {
                         required
                     >
                         <option value="">Chọn chuyên khoa</option>
-                        {/* Thêm danh sách chuyên khoa */}
-                        <option value="cardiology">Tim mạch</option>
-                        <option value="neurology">Thần kinh</option>
-                        <option value="orthopedics">Chỉnh hình</option>
+                        {specialties.map(specialty => (
+                            <option key={specialty.id} value={specialty.name}>{specialty.name}</option>
+                        ))}
                     </select>
+
 
                     <label htmlFor="service">Dịch vụ:</label>
                     <select
@@ -242,9 +304,9 @@ const MedicalRecordList = () => {
                     >
                         <option value="">Chọn dịch vụ</option>
                         {/* Thêm danh sách dịch vụ */}
-                        <option value="consultation">Tư vấn</option>
-                        <option value="surgery">Phẫu thuật</option>
-                        <option value="therapy">Trị liệu</option>
+                        {services.map(service => (
+                            <option key={service.id} value={service.id}>{service.name}</option>
+                        ))}
                     </select>
 
                     <label htmlFor="quantity">Số lượng:</label>
@@ -293,24 +355,24 @@ const MedicalRecordList = () => {
             )}
             <table className="table">
                 <thead>
-                <tr>
-                    <th>Tên Bệnh nhân</th>
-                    <th>Tên Bác sĩ</th>
-                    <th>Chẩn đoán</th>
-                    <th>Điều trị</th>
-                    <th>Ngày ghi nhận</th>
-                    <th>Hành động</th>
-                </tr>
+                    <tr>
+                        <th>Tên Bệnh nhân</th>
+                        <th>Tên Bác sĩ</th>
+                        <th>Chẩn đoán</th>
+                        <th>Điều trị</th>
+                        <th>Ngày ghi nhận</th>
+                        <th>Hành động</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {records.map(record => (
-                    <tr key={record.id}>
-                        <td>{record.patient_name}</td>
-                        <td>{record.doctor_name}</td>
-                        <td>{record.diagnosis}</td>
-                        <td>{record.treatment}</td>
-                        <td>{new Date(record.record_date).toLocaleDateString()}</td>
-                        <td>
+                    {records.map(record => (
+                        <tr key={record.id}>
+                            <td>{record.patient_name}</td>
+                            <td>{record.doctor_name}</td>
+                            <td>{record.diagnosis}</td>
+                            <td>{record.treatment}</td>
+                            <td>{new Date(record.record_date).toLocaleDateString()}</td>
+                            <td>
                                 <button className="btn-icon edit-icon m-2" onClick={() => handleEdit(record)} title="Sửa">
                                     <i className="bi bi-pencil-fill"></i>
                                 </button>
@@ -326,8 +388,8 @@ const MedicalRecordList = () => {
                                     <i className="bi bi-trash-fill"></i>
                                 </button>
                             </td>
-                    </tr>
-                ))}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
