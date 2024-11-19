@@ -19,7 +19,7 @@ const Sidebar = () => {
             <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
                 <div className="sidebar">
                     {/* Close button */}
-                    <IconButton onClick={() => setOpen(false)} sx={{ position: 'absolute', top: 10, right: 10 }}>
+                    <IconButton onClick={() => setOpen(false)} sx={{ position: 'absolute', top: 10, right: 10 }} className="close-btn">
                         <CloseIcon />
                     </IconButton>
                     

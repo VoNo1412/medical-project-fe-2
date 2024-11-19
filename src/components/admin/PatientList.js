@@ -218,7 +218,6 @@ const PatientList = () => {
                             <TableCell>Username</TableCell>
                             <TableCell>Tên</TableCell>
                             <TableCell>Số điện thoại</TableCell>
-                            <TableCell>Giới tính</TableCell>
                             <TableCell>Năm sinh</TableCell>
                             <TableCell>Địa chỉ</TableCell>
                             <TableCell>Hành động</TableCell>
@@ -230,7 +229,6 @@ const PatientList = () => {
                                 <TableCell>{user.username}</TableCell>
                                 <TableCell>{user.fullname}</TableCell>
                                 <TableCell>{user.phone}</TableCell>
-                                <TableCell>{user.gender}</TableCell>
                                 <TableCell>{user.birth_year}</TableCell>
                                 <TableCell>{user.address}</TableCell>
                                 <TableCell>

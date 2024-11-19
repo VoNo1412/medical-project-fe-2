@@ -86,7 +86,7 @@ const SpecialtyList = () => {
 
     return (
         <div>
-            <h3>Quản lý Chuyên Khoa</h3>
+            <h3>Quản lý Dịch Vụ</h3>
             <Button
                 variant="contained"
                 color="primary"
@@ -97,7 +97,7 @@ const SpecialtyList = () => {
                     setOpenDialog(true);
                 }}
             >
-                Thêm Chuyên khoa
+                Thêm Dịch Vụ
             </Button>
             <Button
                 variant="contained"
@@ -110,7 +110,7 @@ const SpecialtyList = () => {
                 }}
                 style={{ marginLeft: 10 }}
             >
-                Thêm DV
+                Thêm Dịch Vụ Phụ
             </Button>
             <TableContainer component={Paper} style={{ marginTop: 20 }}>
                 <Table>

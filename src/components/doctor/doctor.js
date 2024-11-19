@@ -45,6 +45,11 @@ const AdminPage = () => {
             <div className="d-flex">
                 <Sidebar />
                 <div className="flex-grow-1 p-3" style={{ backgroundColor: '#f0f2f5' }}>
+                    <img
+                    src="/img/logo.png"
+                    alt="Admin Dashboard Logo"
+                    className="logo"
+          />
                     <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="medical-records" element={<MedicalRecordList />} />
