@@ -2,27 +2,27 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import useUserStore from '../../store/userStore';
-import { 
-  TextField, 
-  Select, 
-  MenuItem, 
-  Dialog, 
-  DialogActions, 
-  DialogContent, 
-  DialogTitle, 
-  Button, 
-  InputLabel, 
-  FormControl, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Grid,
-  IconButton, 
-  Autocomplete,
-  Paper 
+import {
+    TextField,
+    Select,
+    MenuItem,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Button,
+    InputLabel,
+    FormControl,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Grid,
+    IconButton,
+    Autocomplete,
+    Paper
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
@@ -72,6 +72,7 @@ const MedicalRecordList = () => {
     const { user } = useUserStore(); // Lấy thông tin người dùng từ store
     const [specialties, setSpecialties] = useState([]); // Lưu trữ danh sách chuyên khoa
     const [services, setServices] = useState([]); // Lưu trữ danh sách dịch vụ
+    const [selectedPatient, setSelectedPatient] = useState(null);
 
     // Khai báo state cho form dữ liệu nhập vào
     const [formData, setFormData] = useState({
@@ -85,8 +86,8 @@ const MedicalRecordList = () => {
         gender: '',
         birth_year: '',
         specialty: '',
-        service: '',
-        quantity: '',
+        service_id: '',
+        amount: '',
         unit_price: '',
         total_price: '',
         prescription: ''
@@ -125,6 +126,7 @@ const MedicalRecordList = () => {
     const fetchRecords = async () => {
         try {
             const response = await axios.get('http://localhost:8080/medical-records'); // Gọi API lấy bệnh án
+            console.log("check var: ", response.data);
             if (Array.isArray(response.data)) {
                 setRecords(response.data); // Cập nhật danh sách bệnh án nếu dữ liệu hợp lệ
             } else {
@@ -161,26 +163,26 @@ const MedicalRecordList = () => {
 
 
     const handleEdit = (record) => {
-    setEditingRecord(record);
-    setFormData({
-        patient_id: record.patient_id || '',
-        doctor_id: record.doctor_id || '',
-        diagnosis: record.diagnosis || '',
-        treatment: record.treatment || '',
-        record_date: record.record_date || '',
-        address: record.address || '',
-        phone: record.phone || '',
-        gender: record.gender || '',
-        birth_year: record.birth_year || '',
-        specialty: record.specialty || '',
-        service: record.service || '',
-        quantity: record.quantity || '',
-        unit_price: record.unit_price || '',
-        total_price: record.total_price || '',
-        prescription: record.prescription || ''
-    });
-    setShowForm(true);
-};
+        setEditingRecord(record);
+        setFormData({
+            patient_id: record.patient_id || '',
+            doctor_id: record.doctor_id || '',
+            diagnosis: record.diagnosis || '',
+            treatment: record.treatment || '',
+            record_date: record.record_date || '',
+            address: record.address || '',
+            phone: record.phone || '',
+            gender: record.gender || '',
+            birth_year: record.birth_year || '',
+            specialty: record.specialty || '',
+            service_id: record.service_id || '',
+            amount: record.amount || '',
+            unit_price: record.unit_price || '',
+            total_price: record.total_price || '',
+            prescription: record.prescription || ''
+        });
+        setShowForm(true);
+    };
 
 
     const handleDelete = async (id) => {
@@ -195,92 +197,102 @@ const MedicalRecordList = () => {
 
     const handleChange = async (e) => {
         const { name, value } = e.target;
-        if (name === "specialty") {
-            const id = specialties.filter(x => x.name === value)[0].id
-            fetchServices(id)
+        
+        // If specialty is changed, fetch related services
+        if (name === "specialty" && value) {
+            const id = specialties.find(x => x.name === value)?.id;
+            if (id) fetchServices(id);
         }
-        // Cập nhật giá trị trường hiện tại
+
+        // Update the form data
         setFormData({ ...formData, [name]: value });
 
-        // Nếu thay đổi `patient_id`, gọi API lấy thông tin cuộc hẹn
-        if (name === 'patient_id') {
-            try {
-                const response = await axios.get(`http://localhost:8080/appointments?benhNhanId=${formData.patient_id}&doctorId=${user.profile.id}`);
-                if (response.data) {
-                    // Điền thông tin từ cuộc hẹn vào form
-                    setFormData({
-                        ...formData,
-                        patient_id: value, // Đảm bảo patient_id vẫn giữ giá trị mới
-                        doctor_id: response.data[0].doctor_id || '',
-                        diagnosis: response.data[0].diagnosis || '',
-                        treatment: response.data[0].treatment || '',
-                        record_date: response.data[0].record_date || '',
-                        address: response.data[0].address || '',
-                        phone: response.data[0].phone || '',
-                        gender: response.data[0].gender || '',
-                        birth_year: response.data[0].birth_year || '',
-                        specialty: response.data[0].specialty || '',
-                        service: response.data[0].service || '',
-                        quantity: response.data[0].quantity || '',
-                        unit_price: response.data[0].unit_price || '',
-                        total_price: response.data[0].total_price || '',
-                        prescription: response.data[0].prescription || '',
-                    });
-                } else {
-                    toast.error('Không tìm thấy thông tin cuộc hẹn của bệnh nhân');
-                }
-            } catch (error) {
-                toast.error('Không thể lấy dữ liệu cuộc hẹn của bệnh nhân');
-            }
+        // If patient_id is changed, update the selected patient
+        if (name === "patient_id" && value) {
+            setSelectedPatient(value); // Update state to trigger useEffect
         }
     };
 
-    
+
     const handleSubmit = async (e) => {
-    e.preventDefault(); // Ngăn trình duyệt reload trang
-    try {
-        const url = editingRecord
-            ? `http://localhost:8080/medical-records/${editingRecord.id}`
-            : 'http://localhost:8080/medical-records';
+        e.preventDefault(); // Ngăn trình duyệt reload trang
+        try {
+            const url = editingRecord
+                ? `http://localhost:8080/medical-records/${editingRecord.id}`
+                : 'http://localhost:8080/medical-records';
 
-        const method = editingRecord ? 'put' : 'post';
+            const method = editingRecord ? 'put' : 'post';
+            console.log("this is form: ", formData)
 
-        // Gửi toàn bộ dữ liệu formData
-        await axios({
-            method,
-            url,
-            data: formData,
-        });
+            // Gửi toàn bộ dữ liệu formData
+            // await axios({
+            //     method,
+            //     url,
+            //     data: formData,
+            // });
+            toast.success(`${editingRecord ? 'Cập nhật' : 'Thêm'} bệnh án thành công`);
+            setEditingRecord(null);
+            setFormData({
+                patient_id: '',
+                doctor_id: '',
+                diagnosis: '',
+                treatment: '',
+                record_date: '',
+                specialty: '',
+                service_id: '',
+                service: '',
+                amount: '',
+                prescription: ''
+            });
+            setShowForm(false);
+            fetchRecords(); // Tải lại danh sách sau khi thêm hoặc cập nhật
+        } catch (error) {
+            console.error('API Error:', error);
+            toast.error('Không thể gửi biểu mẫu');
+        }
+    };
 
-        toast.success(`${editingRecord ? 'Cập nhật' : 'Thêm'} bệnh án thành công`);
-        setEditingRecord(null);
-        setFormData({
-            patient_id: '',
-            doctor_id: '',
-            diagnosis: '',
-            treatment: '',
-            record_date: '',
-            address: '',
-            phone: '',
-            gender: '',
-            birth_year: '',
-            specialty: '',
-            service: '',
-            quantity: '',
-            unit_price: '',
-            total_price: '',
-            prescription: ''
-        });
-        setShowForm(false);
-        fetchRecords(); // Tải lại danh sách sau khi thêm hoặc cập nhật
-    } catch (error) {
-        console.error('API Error:', error);
-        toast.error('Không thể gửi biểu mẫu');
-    }
-};
+    // Fetch appointment details when `selectedPatient` changes
+    useEffect(() => {
+        if (selectedPatient) {
+            const fetchAppointmentDetails = async () => {
+                try {
+                    const response = await axios.get(`http://localhost:8080/appointments?benhNhanId=${selectedPatient}&doctorId=${user.profile.id}`);
+                    console.log(response)
+                    if (response.data && response.data.length > 0) {
+                        const appointment = response.data[0];
+                        setFormData({
+                            ...formData,
+                            appt_id: appointment.appt_id,
+                            patient_id: selectedPatient, // Ensure patient_id stays updated
+                            doctor_id: appointment.doctor_id || user.profile.id,
+                            // diagnosis: appointment.diagnosis || '',
+                            // treatment: appointment.treatment || '',
+                            record_date: appointment.appointment_date || appointment.created_at || '',
+                            address: appointment.address || '',
+                            phone: appointment.phone || '',
+                            gender: appointment.gender || '',
+                            birth_year: appointment.birth_year || '',
+                            specialty: appointment.specialty || '',
+                            // service: appointment.service || '',
+                            // amount: appointment.amount || '',
+                            // unit_price: appointment.unit_price || '',
+                            // total_price: appointment.total_price || '',
+                            prescription: appointment.prescription || '',
+                        });
+                    } else {
+                        console.error('No appointment data found for the selected patient');
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch appointment details:', error);
+                }
+            };
 
+            fetchAppointmentDetails();
+        }
+    }, [selectedPatient, user.profile.id]);
 
-
+    console.log(formData)
 
     return (
         <div>
@@ -309,7 +321,7 @@ const MedicalRecordList = () => {
                                         </MenuItem>
                                         {patients.map(patient => (
                                             <MenuItem key={patient.id} value={patient.id}>
-                                                {patient.fullname}
+                                                {patient?.fullname}
                                             </MenuItem>
                                         ))}
                                     </Select>
@@ -321,7 +333,7 @@ const MedicalRecordList = () => {
                                     variant="outlined"
                                     fullWidth
                                     margin="normal"
-                                    value={user.profile.fullname}
+                                    value={user.profile?.fullname}
                                     InputProps={{
                                         readOnly: true,
                                     }}
@@ -354,26 +366,26 @@ const MedicalRecordList = () => {
                                     required
                                     margin="normal"
                                 />
-                                
+
                                 {/* Ngày ghi nhận */}
                                 <TextField
-                                label="Ngày ghi nhận"
-                                variant="outlined"
-                                type="date"
-                                fullWidth
-                                name="record_date"
-                                value={formData.record_date || new Date().toLocaleDateString('en-CA')} // Sử dụng múi giờ địa phương
-                                onChange={handleChange}
-                                required
-                                margin="normal"
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                inputProps={{
-                                    
-                                    min: new Date().toLocaleDateString('en-CA'), // Giới hạn ngày tối thiểu là hôm nay, dùng múi giờ địa phương
-                                }}
-                            />
+                                    label="Ngày ghi nhận"
+                                    variant="outlined"
+                                    type="date"
+                                    fullWidth
+                                    name="record_date"
+                                    value={formData.record_date || new Date().toLocaleDateString('en-CA')} // Sử dụng múi giờ địa phương
+                                    onChange={handleChange}
+                                    required
+                                    margin="normal"
+                                    InputLabelProps={{
+                                        shrink: true,
+                                    }}
+                                    inputProps={{
+
+                                        min: new Date().toLocaleDateString('en-CA'), // Giới hạn ngày tối thiểu là hôm nay, dùng múi giờ địa phương
+                                    }}
+                                />
                             </Grid>
 
                             {/* Cột 2 */}
@@ -459,12 +471,12 @@ const MedicalRecordList = () => {
 
                                 {/* Dịch vụ */}
                                 <FormControl fullWidth margin="normal">
-                                    <InputLabel id="service">Dịch vụ</InputLabel>
+                                    <InputLabel id="service_id">Dịch vụ</InputLabel>
                                     <Select
-                                        labelId="service"
-                                        id="service"
-                                        name="service"
-                                        value={formData.service || ''}
+                                        labelId="service_id"
+                                        id="service_id"
+                                        name="service_id"
+                                        value={formData.service_id || ''}
                                         onChange={handleChange}
                                         required
                                     >
@@ -485,8 +497,8 @@ const MedicalRecordList = () => {
                                     variant="outlined"
                                     type="number"
                                     fullWidth
-                                    name="quantity"
-                                    value={formData.quantity || ''}
+                                    name="amount"
+                                    value={formData.amount || ''}
                                     onChange={handleChange}
                                     required
                                     margin="normal"
@@ -540,82 +552,81 @@ const MedicalRecordList = () => {
                                 />
                             </Grid>
                         </Grid>
-                        
+
                     </form>
                 </DialogContent>
                 <DialogActions>
                     <form onSubmit={handleSubmit}>
-    {/* Các input trong form */}
-    <DialogActions>
-        <Button onClick={() => setShowForm(false)} color="secondary">
-            Hủy
-        </Button>
-        <Button type="submit" color="primary">
-            {editingRecord ? 'Cập nhật' : 'Thêm'} Bệnh án
-        </Button>
-    </DialogActions>
-</form>
+                        {/* Các input trong form */}
+                        <DialogActions>
+                            <Button onClick={() => setShowForm(false)} color="secondary">
+                                Hủy
+                            </Button>
+                            <Button type="submit" color="primary">
+                                {editingRecord ? 'Cập nhật' : 'Thêm'} Bệnh án
+                            </Button>
+                        </DialogActions>
+                    </form>
 
                 </DialogActions>
             </Dialog>
             <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell align="center">Tên Bệnh nhân</TableCell>
-                        <TableCell align="center">Tên Bác sĩ</TableCell>
-                        <TableCell align="center">Chẩn đoán</TableCell>
-                        <TableCell align="center">Điều trị</TableCell>
-                        <TableCell align="center">Ngày ghi nhận</TableCell>
-                        <TableCell align="center">Địa chỉ</TableCell>
-                        <TableCell align="center">Số điện thoại</TableCell>
-                        <TableCell align="center">Giới tính</TableCell>
-                        <TableCell align="center">Năm sinh</TableCell>
-                        <TableCell align="center">Chuyên khoa</TableCell>
-                        <TableCell align="center">Hành động</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {records.map(record => (
-                        <TableRow key={record.id}>
-                            <TableCell align="center">{record.patient_name}</TableCell>
-                            <TableCell align="center">{record.doctor_name}</TableCell>
-                            <TableCell align="center">{record.diagnosis}</TableCell>
-                            <TableCell align="center">{record.treatment}</TableCell>
-                            <TableCell align="center">{new Date(record.record_date).toLocaleDateString()}</TableCell>
-                            <TableCell align="center">{record.address}</TableCell>
-                            <TableCell align="center">{record.phone}</TableCell>
-                            <TableCell align="center">{record.gender}</TableCell>
-                            <TableCell align="center">{record.birth_year}</TableCell>
-                            <TableCell align="center">{record.specialty}</TableCell>
-                            <TableCell align="center">
-                                <IconButton color="primary" onClick={() => handleEdit(record)} title="Sửa">
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton
-                                    color="secondary"
-                                    onClick={() => {
-                                        if (window.confirm('Bạn có chắc chắn muốn xóa bệnh án này không?')) {
-                                            handleDelete(record.id);
-                                        }
-                                    }}
-                                    title="Xóa"
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                                <IconButton
-                                    color="default"
-                                    onClick={() => handleViewDetail(record)}
-                                    title="Xem chi tiết"
-                                >
-                                    <i className="bi bi-eye-fill"></i>
-                                </IconButton>
-                            </TableCell>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell align="center">Tên Bệnh nhân</TableCell>
+                            <TableCell align="center">Tên Bác sĩ</TableCell>
+                            <TableCell align="center">Chẩn đoán</TableCell>
+                            <TableCell align="center">Điều trị</TableCell>
+                            <TableCell align="center">Ngày ghi nhận</TableCell>
+                            <TableCell align="center">Địa chỉ</TableCell>
+                            <TableCell align="center">Số điện thoại</TableCell>
+                            <TableCell align="center">Giới tính</TableCell>
+                            <TableCell align="center">Năm sinh</TableCell>
+                            <TableCell align="center">Chuyên khoa</TableCell>
+                            <TableCell align="center">Số lượng</TableCell>
+                            <TableCell align="center">Tiền dịch vụ</TableCell>
+                            <TableCell align="center">Tổng tiền</TableCell>
+                            <TableCell align="center">Hành động</TableCell>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                        {records.map(record => (
+                            <TableRow key={record.id}>
+                                <TableCell align="center">{record.patient_name}</TableCell>
+                                <TableCell align="center">{record.doctor_name}</TableCell>
+                                <TableCell align="center">{record.diagnosis}</TableCell>
+                                <TableCell align="center">{record.treatment}</TableCell>
+                                <TableCell align="center">{new Date(record.record_date).toLocaleDateString()}</TableCell>
+                                <TableCell align="center">{record.address}</TableCell>
+                                <TableCell align="center">{record.phone}</TableCell>
+                                <TableCell align="center">{record.gender}</TableCell>
+                                <TableCell align="center">{record.birth_year}</TableCell>
+                                <TableCell align="center">{record.specialty}</TableCell>
+                                <TableCell align="center">{record.amount}</TableCell>
+                                <TableCell align="center">{record.price}</TableCell>
+                                <TableCell align="center">{record.total_price}</TableCell>
+                                <TableCell align="center">
+                                    <IconButton color="primary" onClick={() => handleEdit(record)} title="Sửa">
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        color="secondary"
+                                        onClick={() => {
+                                            if (window.confirm('Bạn có chắc chắn muốn xóa bệnh án này không?')) {
+                                                handleDelete(record.id);
+                                            }
+                                        }}
+                                        title="Xóa"
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
 };
