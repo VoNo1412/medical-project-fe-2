@@ -49,7 +49,7 @@ const MedicalRecordList = () => {
         gender: '',
         birth_year: '',
         specialty: '',
-        service_id: '',
+        service: '',
         amount: '',
         unit_price: '',
         total_price: '',
@@ -138,7 +138,7 @@ const MedicalRecordList = () => {
             gender: record.gender || '',
             birth_year: record.birth_year || '',
             specialty: record.specialty || '',
-            service_id: record.service_id || '',
+            service: record.service || '',
             amount: record.amount || '',
             unit_price: record.unit_price || '',
             total_price: record.total_price || '',
@@ -434,12 +434,12 @@ const MedicalRecordList = () => {
 
                                 {/* Dịch vụ */}
                                 <FormControl fullWidth margin="normal">
-                                    <InputLabel id="service_id">Dịch vụ</InputLabel>
+                                    <InputLabel id="service">Dịch vụ</InputLabel>
                                     <Select
-                                        labelId="service_id"
-                                        id="service_id"
-                                        name="service_id"
-                                        value={formData.service_id || ''}
+                                        labelId="service"
+                                        id="service"
+                                        name="service"
+                                        value={formData.service || ''}
                                         onChange={handleChange}
                                         required
                                     >
