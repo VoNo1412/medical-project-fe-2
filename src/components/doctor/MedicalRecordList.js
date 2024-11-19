@@ -26,6 +26,43 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
+const handlePrint = (record) => {
+        const printContent = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h4 style="text-align: center;">NHA KHOA DENTAL CARE</h4>
+                <p style="text-align: center;">Địa chỉ: Xuân Khánh, Ninh Kiều, Cần Thơ</p>
+                <p style="text-align: center;">Điện thoại: 0123456789</p>
+                <hr />
+                <p><strong>Họ và tên:</strong> ${record.patient_name}</p>
+                <p><strong>Bác sĩ điều trị:</strong> ${record.doctor_name}</p>
+                <p><strong>Ngày khám:</strong> ${new Date(record.record_date).toLocaleDateString()}</p>
+                <p><strong>Chẩn đoán:</strong> ${record.diagnosis}</p>
+                <p><strong>Điều trị:</strong> ${record.treatment}</p>
+                <hr />
+                <h6 class="text-center">PHIM CHỤP X-QUANG</h6>
+                <div class="text-center">
+                    <img
+                        src="/path/to/xray-image.jpg" // Thay bằng đường dẫn ảnh chụp X-quang
+                        alt="Phim chụp X-quang"
+                        style="max-width: 100%;"
+                    />
+                </div>
+            </div>
+        `;
+        
+        const printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+    };
+    
+    const handleViewDetail = (record) => {
+        // setSelectedRecord(record);
+        // setShowDetail(true);
+    };
+
+
+
 const MedicalRecordList = () => {
     // Khai báo các state để lưu trữ dữ liệu và trạng thái của các yếu tố trong component
     const [records, setRecords] = useState([]); // Lưu trữ danh sách bệnh án

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Navbar, Nav, Button, Form } from 'react-bootstrap';
+import { AppBar, Toolbar, Button, IconButton, Typography, Box, Menu, MenuItem } from '@mui/material';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom';
 import useUserStore from '../../store/userStore';
+import { Refresh as RefreshIcon, Logout as LogoutIcon, Person as PersonIcon } from '@mui/icons-material';
 import '../../assets/css/admin/header.css'; // Đảm bảo đường dẫn đúng
 
 const DoctorHeader = () => {
-  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const userProfile = useUserStore((state) => state.user.profile);
   const clearUser = useUserStore((state) => state.clearUser);
   const [, , removeCookie] = useCookies(['token']);
@@ -16,8 +17,12 @@ const DoctorHeader = () => {
     window.location.reload(); // Làm mới trang
   };
 
-  const toggleProfileForm = () => {
-    setShowProfileForm(!showProfileForm); // Chuyển trạng thái hiển thị form
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
   };
 
   const handleLogout = () => {
@@ -35,33 +40,53 @@ const DoctorHeader = () => {
   };
 
   return (
-      <Navbar expand="lg" className="header px-3">
-        <Navbar.Brand href="#home">
-          <img
-              src="/img/logo.png" // Đường dẫn tới hình ảnh logo
-              alt="Admin Dashboard Logo"
-          />
-        </Navbar.Brand>
-        <Nav className="d-flex align-items-center" style={{ marginLeft: 'auto' }}> {/* Sử dụng marginLeft: 'auto' để căn lề phải */}
-          <Button variant="outline-light" className="me-2" onClick={handleRefresh}>
-            <i className="bi bi-arrow-clockwise"></i> {/* Icon Refresh */}
-          </Button>
+    <AppBar position="sticky" className="appbar">
+      <Toolbar className="toolbar">
+        {/* Logo - Bên trái */}
+        <Box className="logo-container">
+          
+          <Typography variant="h6" className="logo-text">
+            Doctor Dashboard
+          </Typography>
+        </Box>
+
+        {/* Các nút và thông tin người dùng - Bên phải */}
+        <Box className="user-info-container">
+          <IconButton color="inherit" onClick={handleRefresh} className="refresh-icon">
+            <RefreshIcon />
+          </IconButton>
+
           {userProfile ? (
-              <>
-              <Button variant="outline-light" onClick={toggleProfileForm}>
-                <i className="bi bi-person-circle"></i> Hello, <span className="profile-name">{userProfile.fullname}</span>
-            </Button>
-              <Button variant="danger" onClick={handleLogout} className="ms-2">
-                <i className="bi bi-box-arrow-right"></i> {/* Icon Logout */}
+            <>
+              <Button
+                variant="text"
+                color="inherit"
+                startIcon={<PersonIcon />}
+                onClick={handleProfileMenuOpen}
+                className="profile-button"
+              >
+                Hello - <span className="profile-name">{userProfile.fullname}</span>
               </Button>
-              </>
+              <IconButton
+                color="inherit"
+                onClick={handleLogout}
+                className="logout-icon"
+              >
+                <LogoutIcon />
+              </IconButton>
+            </>
           ) : (
-              <Button className="logout" variant="outline-light" onClick={() => navigate('/login')}>
-                Login
-              </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={() => navigate('/login')}
+            >
+              Login
+            </Button>
           )}
-        </Nav>
-      </Navbar>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 
